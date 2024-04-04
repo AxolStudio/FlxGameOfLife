@@ -33,8 +33,16 @@ class PlayState extends FlxState
 	// the speed of the simulation
 	public var speed:Int = 0;
 
+	// whether the simulation is paused
+	public var paused:Bool = false;
+	public var txtSpeed:FlxText;
+
 	// the different speeds we can use, in seconds
-	public static var SPEEDS:Array<Float> = [1, .75, .5, .25];
+	public static var SPEEDS:Array<Float> = [1, .75, .25];
+
+	public static var SPEED_TEXT:Array<String> = ["||", ">", ">>", ">>>"];
+
+	public var lastUpdate:Float = 0;
 
 	override public function create()
 	{
@@ -43,6 +51,8 @@ class PlayState extends FlxState
 		createMap();
 		createHUD();
 		makeGrid();
+
+		setSpeed(1);
 
 		super.create();
 	}
@@ -118,23 +128,25 @@ class PlayState extends FlxState
 		yPos += txt.height + 4;
 
 		// speed down button
-		var btn:FlxButton = new FlxButton(0, yPos, "<", speedDown);
+		var btn:FlxButton = new FlxButton(0, yPos, "-", speedDown);
 		btn.x = startX + midX - (btn.width / 2);
 		add(btn);
 
 		yPos += btn.height + 4;
 
 		// current speed
-		txt = new FlxText(startX, yPos, endX - startX, ">");
+		txt = new FlxText(startX, yPos, endX - startX, SPEED_TEXT[0]);
 		txt.color = FlxColor.WHITE;
 		txt.alignment = FlxTextAlign.CENTER;
 		txt.x = startX + midX - (txt.width / 2);
 		add(txt);
 
+		txtSpeed = txt;
+
 		yPos += txt.height + 4;
 
 		// speed up button
-		btn = new FlxButton(startX, yPos, ">", speedUp);
+		btn = new FlxButton(startX, yPos, "+", speedUp);
 		btn.x = startX + midX - (btn.width / 2);
 		add(btn);
 
@@ -182,13 +194,42 @@ class PlayState extends FlxState
 		add(btn);
 	}
 
+	private function setSpeed(Value:Int):Void
+	{
+		if (Value <= 0 || Value > SPEEDS.length)
+		{
+			return;
+		}
+		speed = Value;
+
+		showSpeedAmount();
+	}
+
+	private function showSpeedAmount()
+	{
+		if (paused)
+			txtSpeed.text = SPEED_TEXT[0];
+		else
+			txtSpeed.text = SPEED_TEXT[speed];
+	}
+
 	private function clearMap():Void {}
 
-	private function speedDown():Void {}
+	private function speedDown():Void
+	{
+		setSpeed(speed - 1);
+	}
 
-	private function speedUp():Void {}
+	private function speedUp():Void
+	{
+		setSpeed(speed + 1);
+	}
 
-	private function pauseGame():Void {}
+	private function pauseGame():Void
+	{
+		paused = !paused;
+		showSpeedAmount();
+	}
 
 	private function selectPreset(preset:Int):Void {}
 
@@ -200,10 +241,64 @@ class PlayState extends FlxState
 
 		updateMouse();
 
-		updateSimulation(elapsed);
+		updateSimulation();
 	}
 
-	private function updateSimulation(elapsed:Float):Void {}
+	private function updateSimulation():Void
+	{
+		if (paused || lastUpdate + (SPEEDS[speed] * 1000) > FlxG.game.ticks)
+			return;
+
+		lastUpdate = FlxG.game.ticks;
+
+		// run the simulation
+
+		var newGen:Array<Int> = [];
+
+		for (y in 0...MAP_SIZE)
+		{
+			for (x in 0...MAP_SIZE)
+			{
+				var count:Int = 0;
+
+				for (yy in -1...2)
+				{
+					for (xx in -1...2)
+					{
+						if (xx == 0 && yy == 0)
+							continue;
+
+						var nx:Int = x + xx;
+						var ny:Int = y + yy;
+
+						if (nx < 0 || ny < 0 || nx >= MAP_SIZE || ny >= MAP_SIZE)
+							continue;
+
+						if (lifeMap.getTile(nx, ny) == 1)
+							count++;
+					}
+				}
+
+				var tile:Int = lifeMap.getTile(x, y);
+
+				if (tile == 1)
+				{
+					if (count < 2 || count > 3)
+						tile = 0;
+				}
+				else if (count == 3)
+					tile = 1;
+
+				newGen.push(tile);
+			}
+		}
+
+
+		for (i in 0...newGen.length)
+		{
+			lifeMap.setTile(i % MAP_SIZE, Std.int(i / MAP_SIZE), newGen[i]);
+		}
+	}
 
 	private function updateMouse():Void
 	{
