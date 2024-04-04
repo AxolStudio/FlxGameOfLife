@@ -48,7 +48,7 @@ class PlayState extends FlxState
 	{
 		var startX:Int = Std.int(lifeMap.width + 16);
 
-		btnClear = new FlxButton(startX, 8, "CLEAR", clearMap);
+		add(btnClear = new FlxButton(startX, 8, "CLEAR", clearMap));
 		btnClear.width = FlxG.width - startX - 16;
 	}
 
