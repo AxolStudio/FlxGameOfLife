@@ -5,14 +5,14 @@ import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.FlxSubState;
 import flixel.math.FlxPoint;
-import flixel.text.FlxText;
+import flixel.text.FlxBitmapText;
+import flixel.text.FlxText.FlxTextAlign;
 import flixel.tile.FlxBaseTilemap.FlxTilemapAutoTiling;
 import flixel.tile.FlxTilemap;
 import flixel.ui.FlxButton;
 import flixel.util.FlxAxes;
 import flixel.util.FlxColor;
 import openfl.display.BitmapData;
-import openfl.display.StageQuality;
 import openfl.geom.Rectangle;
 import openfl.ui.Mouse;
 import openfl.ui.MouseCursor;
@@ -56,7 +56,7 @@ class PlayState extends FlxState
 	public static var SPEED_TEXT:Array<String> = ["||", ">", ">>", ">>>"];
 
 	// text object that shows the current speed
-	public var txtSpeed:FlxText;
+	public var txtSpeed:FlxBitmapText;
 
 	// the pause button (so we can change the label)
 	public var btnPause:FlxButton;
@@ -152,8 +152,9 @@ class PlayState extends FlxState
 		var midX:Int = Std.int((endX - startX) / 2);
 		var yPos:Float = 8;
 
-		var txt:FlxText = new FlxText(startX, yPos, endX - startX, "SPEED");
-		txt.color = FlxColor.WHITE;
+		var txt:FlxBitmapText = new FlxBitmapText(startX, yPos, "SPEED");
+		txt.scale.set(2, 2);
+		txt.updateHitbox();
 		txt.alignment = FlxTextAlign.CENTER;
 		txt.x = startX + midX - (txt.width / 2);
 		add(txt);
@@ -171,8 +172,9 @@ class PlayState extends FlxState
 		yPos += btn.height + 4;
 
 		// current speed
-		txt = new FlxText(startX, yPos, endX - startX, SPEED_TEXT[0]);
-		txt.color = FlxColor.WHITE;
+		txt = new FlxBitmapText(startX, yPos, SPEED_TEXT[0]);
+		txt.scale.set(2, 2);
+		txt.updateHitbox();
 		txt.alignment = FlxTextAlign.CENTER;
 		txt.x = startX + midX - (txt.width / 2);
 		add(txt);
@@ -458,10 +460,10 @@ class RulesState extends FlxSubState
 	// the rules!
 	public static var RULES:Array<String> = [
 		"Every 'step', all the cells in the grid are checked to see if they should be alive or dead in the next generation using the following criteria:",
-		" ◼ Any live cell with fewer than two live neighbours dies, as if by underpopulation.",
-		" ◼ Any live cell with two or three live neighbours lives on to the next generation.",
-		" ◼ Any live cell with more than three live neighbours dies, as if by overpopulation.",
-		" ◼ Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction."
+		" - Any live cell with fewer than two live neighbours dies",
+		" + Any live cell with two or three live neighbours lives on",
+		" - Any live cell with more than three live neighbours dies",
+		" + Any dead cell with exactly three live neighbours becomes a live cell"
 	];
 
 	override public function create()
@@ -469,35 +471,39 @@ class RulesState extends FlxSubState
 		bgColor = 0x99000000;
 
 		var back:FlxSprite = new FlxSprite();
-		back.makeGraphic(FlxG.width - 120, FlxG.height - 120, FlxColor.WHITE);
+		back.makeGraphic(FlxG.width - 68, FlxG.height - 68, FlxColor.WHITE);
 		back.pixels.fillRect(new Rectangle(4, 4, back.width - 8, back.height - 8), FlxColor.BLACK);
 		back.screenCenter();
+
 		add(back);
 
-		var txt:FlxText = new FlxText(0, back.y + 12, 0, "CONWAY'S GAME OF LIFE");
-		txt.size = 16;
-		txt.color = FlxColor.WHITE;
-		txt.alignment = FlxTextAlign.LEFT;
+		var txt:FlxBitmapText = new FlxBitmapText(0, back.y + 20, "CONWAY'S GAME OF LIFE");
+		txt.alignment = FlxTextAlign.CENTER;
+		txt.scale.set(4, 4);
+		txt.updateHitbox();
 		txt.screenCenter(FlxAxes.X);
-		txt.x = Std.int(txt.x);
 		add(txt);
 
-		txt = new FlxText(0, txt.y + txt.height + 4, 0, "-+- RULES -+-");
-		txt.size = 14;
-		txt.color = FlxColor.WHITE;
-		txt.alignment = FlxTextAlign.LEFT;
+		txt = new FlxBitmapText(0, txt.y + txt.height + 8, "-+- RULES -+-");
+		txt.alignment = FlxTextAlign.CENTER;
+		txt.scale.set(3, 3);
+		txt.updateHitbox();
 		txt.screenCenter(FlxAxes.X);
-		txt.x = Std.int(txt.x);
 		add(txt);
+
 
 		var yPos:Float = txt.y + txt.height + 8;
 
 		for (rule in RULES)
 		{
-			txt = new FlxText(back.x + 12, yPos, back.width - 24, rule);
-			txt.size = 12;
-			txt.color = FlxColor.WHITE;
+			txt = new FlxBitmapText(back.x + 20, yPos, rule);
 			txt.alignment = FlxTextAlign.LEFT;
+			txt.fieldWidth = Std.int((back.width - 40) / 2.5);
+			txt.wrap = WORD(LINE_WIDTH);
+			txt.autoSize = false;
+
+			txt.scale.set(2.5, 2.5);
+			txt.updateHitbox();
 
 			add(txt);
 
@@ -505,8 +511,8 @@ class RulesState extends FlxSubState
 		}
 
 		var btn:FlxButton = new FlxButton(0, 0, "CLOSE", close);
-		btn.x = back.x + back.width - btn.width - 12;
-		btn.y = back.y + back.height - btn.height - 12;
+		btn.x = back.x + back.width - btn.width - 20;
+		btn.y = back.y + back.height - btn.height - 20;
 		add(btn);
 
 		super.create();
