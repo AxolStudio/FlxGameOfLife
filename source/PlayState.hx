@@ -12,6 +12,7 @@ import flixel.ui.FlxButton;
 import flixel.util.FlxAxes;
 import flixel.util.FlxColor;
 import openfl.display.BitmapData;
+import openfl.display.StageQuality;
 import openfl.geom.Rectangle;
 import openfl.ui.Mouse;
 import openfl.ui.MouseCursor;
@@ -68,9 +69,8 @@ class PlayState extends FlxState
 
 	override public function create()
 	{
-		FlxG.camera.pixelPerfectRender = true;
 		FlxG.autoPause = false;
-
+		
 		bgColor = COLOR_BACK;
 
 		initMouse();
